@@ -9,6 +9,28 @@ import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
 
+# Configure page shell settings
+st.set_page_config(page_title="DHARINI 3D Navigator", layout="centered", page_icon="🧠")
+
+# ==============================================================================
+# CSS INJECTION FOR PERFECT CENTER ALIGNMENT
+# ==============================================================================
+st.markdown("""
+    <style>
+        /* Centers the main text blocks, titles, and captions */
+        .centered-title-block {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        /* Forces the image block wrapper to flex-center perfectly */
+        [data-testid="stImage"] {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            margin: 0 auto !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 st.set_page_config(page_title="DHARINI 3D Navigator", layout="centered", page_icon="🧠")
 st.title("🧠 DHARINI Full Lifespan 3D Navigator")
 st.caption("An interactive multi-specimen fly-through engine powered by IIT Madras and AWS Open Data.")
