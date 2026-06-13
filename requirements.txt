@@ -1,3 +1,4 @@
+streamlit
 nibabel
 numpy
 boto3
