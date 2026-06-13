@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import cv2
 import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
