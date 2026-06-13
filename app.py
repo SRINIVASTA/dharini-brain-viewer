@@ -228,7 +228,7 @@ styles = getSampleStyleSheet()
 # 1. Add Text Content to the Document Structure
 story.append(Paragraph(f"<b>DHARINI NEUROIMAGING RECONSTRUCTION REPORT</b>", styles['Title']))
 story.append(Spacer(1, 20))
-story.append(Paragraph(f"<b>Lead Imaging Engineer:</b> Srinivasa", styles['Normal']))
+story.append(Paragraph(f"<b>Lead Imaging Engineer:</b> Srinivasta", styles['Normal']))
 story.append(Paragraph(f"<b>Target Subject:</b> {chosen_specimen}", styles['Normal']))
 story.append(Paragraph(f"<b>Anatomical Slice Coordinate:</b> Z-Index Frame {target_z} / {max_slices}", styles['Normal']))
 story.append(Spacer(1, 15))
