@@ -31,6 +31,10 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+# Render centered header elements using HTML blocks
+st.markdown('<h1 class="centered-title-block">🧠 DHARINI Full Lifespan 3D Navigator</h1>', unsafe_allow_html=True)
+st.markdown('<p class="centered-title-block" style="color: gray; margin-bottom: 25px;">An interactive multi-specimen fly-through engine powered by IIT Madras and AWS Open Data.</p>', unsafe_allow_html=True)
+
 st.set_page_config(page_title="DHARINI 3D Navigator", layout="centered", page_icon="🧠")
 st.title("🧠 DHARINI Full Lifespan 3D Navigator")
 st.caption("An interactive multi-specimen fly-through engine powered by IIT Madras and AWS Open Data.")
