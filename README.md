@@ -78,4 +78,4 @@ This application lowers the barrier to entry for studying human brain developmen
 
 ---
 ---
-*Developed and architected by **Srinivasa** as an open-source educational dashboard showcasing cloud data pipe optimization for high-throughput healthcare informatics.*
+*Developed and architected by **Srinivasta** as an open-source educational dashboard showcasing cloud data pipe optimization for high-throughput healthcare informatics.*
