@@ -79,27 +79,27 @@ SPECIMEN_MODELS = {
 
 @st.cache_resource
 def load_and_map_specimen(model_name):
- """Downloads and uncompresses the targeted NIfTI archive safely onto local disk space."""
- config = SPECIMEN_MODELS[model_name]
- raw_path = config["raw_nii"]
- gz_path = config["gz"]
- s3_key = config["key"]
- 
- if not os.path.exists(raw_path):
- s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
- with st.spinner(f"📥 Downloading {model_name} from AWS (~105MB)..."):
- s3.download_file(BUCKET_NAME, s3_key, gz_path)
- 
- with st.spinner("💥 Unpacking 3D volumetric matrix layers..."):
- with gzip.open(gz_path, 'rb') as f_in:
- with open(raw_path, 'wb') as f_out:
- shutil.copyfileobj(f_in, f_out)
- 
- if os.path.exists(gz_path):
- os.remove(gz_path)
- 
- nii_obj = nib.load(raw_path, mmap='r')
- return nii_obj.dataobj
+    """Downloads and uncompresses the targeted NIfTI archive safely onto local disk space."""
+    config = SPECIMEN_MODELS[model_name]
+    raw_path = config["raw_nii"]
+    gz_path = config["gz"]
+    s3_key = config["key"]
+    
+    if not os.path.exists(raw_path):
+        s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+        with st.spinner(f"📥 Downloading {model_name} from AWS (~105MB)..."):
+            s3.download_file(BUCKET_NAME, s3_key, gz_path)
+    
+        with st.spinner("💥 Unpacking 3D volumetric matrix layers..."):
+            with gzip.open(gz_path, 'rb') as f_in:
+                with open(raw_path, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+    
+    if os.path.exists(gz_path):
+        os.remove(gz_path)
+    
+    nii_obj = nib.load(raw_path, mmap='r')
+    return nii_obj.dataobj
 
 # Initialize Session States for the looping engine
 if "play_loop" not in st.session_state:
