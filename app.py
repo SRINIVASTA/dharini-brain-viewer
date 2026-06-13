@@ -1,75 +1,87 @@
 import streamlit as st
-import nibabel as nib
 import numpy as np
+import cv2
 import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
-import os
 
-st.set_page_config(page_title="DHARINI 3D Core Viewer", layout="centered", page_icon="🧠")
-st.title("🧠 IIT Madras DHARINI Dataset Viewer")
-st.caption("A production-ready 3D brain viewer streaming straight from AWS Open Data.")
+st.set_page_config(page_title="DHARINI Live Streamer", layout="centered", page_icon="🧠")
+st.title("🧠 DHARINI Real-Time 3D Volume Slicer")
+st.caption("Streaming exact voxel structures straight from the AWS Open Data Registry.")
 
-# Hardcoded metadata shapes matching the actual AWS uncompressed NIfTI footprints
-SHAPE_21GW = (625, 625, 707) 
 BUCKET_NAME = "dharani-fetal-brain-atlas"
-LOCAL_PATH = "temp_slice.nii"
+S3_KEY = "data3d/FB34_nisl_128mpp_rgb_masked.nii.gz"
+
+# The real dimensions of the NIfTI array dataset: (Width, Height, Depth, 1, Channels)
+X_DIM, Y_DIM, Z_DIM = 625, 625, 707
+BYTES_PER_PIXEL = 3  # RGB data channels
 
 @st.cache_resource
-def get_s3_client():
-    """Initializes an unsigned AWS S3 Client instance for open metrics mapping."""
+def get_s3():
     return boto3.client('s3', config=Config(signature_version=UNSIGNED))
 
-s3 = get_s3_client()
+# 1. UI Navigation Panel Elements
+st.sidebar.header("🕹️ Slice Explorer")
+target_z = st.sidebar.slider("Select Z-Index Position", 0, Z_DIM - 1, 279)
+downsample = st.sidebar.slider("Pixel Detail Striding", 1, 4, 2)
 
-# Sidebar inputs
-st.sidebar.header("🕹️ Controls")
-specimen = st.sidebar.selectbox("Select Specimen Maturation", ["Specimen 1 (14 Weeks - FB34)"])
-plane = st.sidebar.selectbox("Select Anatomical Cross-Section", ["Coronal View (Axis 2)"])
+@st.cache_data(show_spinner="Streaming true anatomical slice array from AWS...")
+def stream_brain_slice(z_index):
+    s3 = get_s3()
+    
+    # NIfTI-1 file header offset is exactly 348 bytes.
+    nifti_header_offset = 348
+    
+    # Calculate the exact byte location of the selected 2D layer inside the 3D block
+    slice_size_bytes = X_DIM * Y_DIM * BYTES_PER_PIXEL
+    start_byte = nifti_header_offset + (z_index * slice_size_bytes)
+    end_byte = start_byte + slice_size_bytes - 1
+    
+    # Execute HTTP Range Request to fetch only this specific slice's bytes (approx. 1.1MB)
+    response = s3.get_object(
+        Bucket=BUCKET_NAME,
+        Key=S3_KEY,
+        Range=f"bytes={start_byte}-{end_byte}"
+    )
+    
+    # Read raw string bytes straight into an uncompressed NumPy array matrix
+    raw_bytes = response['Body'].read()
+    flat_array = np.frombuffer(raw_bytes, dtype=np.uint8)
+    
+    # Reshape vector straight into the standard tissue matrix grid
+    slice_2d = flat_array.reshape((Y_DIM, X_DIM, BYTES_PER_PIXEL))
+    return slice_2d
 
-# Define dynamic selection slider boundaries based on Z-depth lengths
-target_z = st.sidebar.slider("Select Index Depth Layer", 0, SHAPE_21GW[2] - 1, SHAPE_21GW[2] // 2)
-downsample = st.sidebar.slider("Resolution Downsample Striding", 1, 8, 2)
-
-@st.cache_data(show_spinner="Streaming exact voxel chunk from AWS...")
-def fetch_and_process_slice(z_index, stride_step):
-    try:
-        # Step A: Request ONLY the byte range metadata offset matching our chosen Z-plane slice
-        # Rather than downloading a 140GB image, we use an HTTP Range header hack
-        s3_key = "data3d/FB34_nisl_128mpp_rgb_masked.nii.gz"
+# 2. Extract and Process the Chosen Array Layer
+try:
+    raw_anatomy = stream_brain_slice(target_z)
+    
+    # Downsample matrix array to protect browser presentation memory
+    processed_frame = raw_anatomy[::downsample, ::downsample, :]
+    
+    # --- COLAB MEDICAL CONTRAST-BOOST PIPELINE ---
+    gray_calc = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2GRAY)
+    brain_mask = gray_calc > 5  # Filter out dark, unmapped background voxels
+    
+    if np.any(brain_mask):
+        # Localize exact maximum and minimum threshold vectors
+        t_min = np.min(processed_frame[brain_mask])
+        t_max = np.max(processed_frame[brain_mask])
         
-        # Calculate dynamic offsets or pull raw slice index bounds
-        # For simplicity, we execute safe proxy chunk parsing
-        if not os.path.exists(LOCAL_PATH):
-            # Fallback placeholder to generate immediate render canvas blocks
-            pass
+        # Stretch visible tones across full 8-bit dynamic spectrum
+        clipped = np.clip(processed_frame, t_min, t_max)
+        normalized = (255.0 * (clipped - t_min) / (t_max - t_min)).astype(np.uint8)
+        final_render = np.rot90(normalized, 1)
+    else:
+        final_render = np.rot90(processed_frame, 1)
 
-        # Since Streamlit Community Cloud needs runtime speed, we fetch via safe index arrays:
-        # We can dynamically pull an on-demand fallback array matrix directly
-        # Mocking an elegant, mathematically valid 3D render matrix for visualization bounds
-        grid_dim = 300
-        x = np.linspace(-2, 2, grid_dim)
-        y = np.linspace(-2, 2, grid_dim)
-        X, Y = np.meshgrid(x, y)
-        
-        # Simulating anatomical cortical plate growth shift patterns mapping our exact Z layer
-        r = np.sqrt(X**2 + Y**2)
-        wave = np.sin(5 * r - (z_index / 50.0)) * np.exp(-r**2)
-        normalized = ((wave - wave.min()) / (wave.max() - wave.min()) * 255).astype(np.uint8)
-        
-        # Rotate matrix to match brain mapping orientations
-        return np.rot90(normalized, 1)
-    except Exception as e:
-        return None
-
-# Render output matrix block
-slice_img = fetch_and_process_slice(target_z, downsample)
-
-if slice_img is not None:
+    # 3. Output Render Result to Streamlit Canvas
     st.image(
-        slice_img, 
-        caption=f"Real-time slice viewport extraction at Z-index: {target_z}", 
+        final_render, 
+        caption=f"Anatomical Matrix view at Z-depth layer: {target_z}", 
         use_container_width=True
     )
-else:
-    st.error("Error connecting to the AWS S3 storage array.")
+
+except Exception as e:
+    st.error(f"Failed to fetch cloud byte arrays: {e}")
+    st.info("Tip: Ensure your GitHub repository contains boto3 and dependencies in requirements.txt.")
