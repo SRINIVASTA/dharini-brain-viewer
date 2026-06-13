@@ -86,7 +86,9 @@ chosen_specimen = st.sidebar.selectbox("Select Specimen Maturation", list(SPECIM
 try:
     mmap_data = load_and_map_specimen(chosen_specimen)
     shape = mmap_data.shape
-    max_slices = shape
+    
+    # FIX: Grab only the 3rd index (Z-axis depth layers) from the shape tuple
+    max_slices = int(shape[2])
 
     # Video Loop playback controls
     st.sidebar.subheader("🎬 Animation Player")
