@@ -12,6 +12,8 @@ from botocore.config import Config
 st.set_page_config(page_title="DHARINI 3D Navigator", layout="centered", page_icon="🧠")
 st.title("🧠 DHARINI Full Lifespan 3D Navigator")
 st.caption("An interactive multi-specimen fly-through engine powered by IIT Madras and AWS Open Data.")
+st.write("💡 **What to watch for in the animation:** Press *Play Loop* and compare Specimen 1 against Specimen 5. Notice how the internal dark chambers (ventricles) compress as the surrounding brain matter grows thicker, and look for the early physical folds starting to appear on the outer edge of the 24-week brain!")
+
 
 # Configuration Profiles
 BUCKET_NAME = "dharani-fetal-brain-atlas"
