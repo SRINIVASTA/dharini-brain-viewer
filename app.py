@@ -125,86 +125,86 @@ try:
     with col2:
         if st.button("⏹️ Pause"):
             st.session_state.play_loop = False
-    
+ 
     # Interval pacing selector
     loop_speed = st.sidebar.slider("Playback Speed (Seconds/Frame)", 0.01, 0.5, 0.05, step=0.01)
-    
+ 
     # Manual Navigation Sliders
     target_z = st.sidebar.slider("Manual Z-Index Position", 0, max_slices - 1, max_slices // 2)
     downsample = st.sidebar.slider("Pixel Detail Downsampling", 1, 4, 2)
-
- # 2. RUNTIME ANIMATION LOOP LOGIC (THE GIF EFFECT)
- if st.session_state.play_loop:
- center_slice = max_slices // 2
- start_frame = max(0, center_slice - 25)
- end_frame = min(max_slices, center_slice + 25)
  
- frame_placeholder = st.empty()
+    # 2. RUNTIME ANIMATION LOOP LOGIC (THE GIF EFFECT)
+    if st.session_state.play_loop:
+        center_slice = max_slices // 2
+        start_frame = max(0, center_slice - 25)
+        end_frame = min(max_slices, center_slice + 25)
  
- while st.session_state.play_loop:
- for current_z in range(start_frame, end_frame):
- if not st.session_state.play_loop:
- break
+        frame_placeholder = st.empty()
  
- # Extract and process matrix arrays on the fly
- raw_slice = mmap_data[::downsample, ::downsample, current_z, 0, :].astype(np.float32)
- gray_calc = np.mean(raw_slice, axis=2)
- brain_mask = gray_calc > 5
+        while st.session_state.play_loop:
+            for current_z in range(start_frame, end_frame):
+                if not st.session_state.play_loop:
+                    break
  
- if np.any(brain_mask):
- t_min, t_max = np.min(raw_slice[brain_mask]), np.max(raw_slice[brain_mask])
- clipped = np.clip(raw_slice, t_min, t_max)
- normalized = (255.0 * (clipped - t_min) / (t_max - t_min)).astype(np.uint8)
- final_render = np.rot90(normalized, 3) # Fixed to turn image right-side up
- else:
- blank_background = np.zeros_like(raw_slice).astype(np.uint8)
- final_render = np.rot90(blank_background, 3)
+                # Extract and process matrix arrays on the fly
+                raw_slice = mmap_data[::downsample, ::downsample, current_z, 0, :].astype(np.float32)
+                gray_calc = np.mean(raw_slice, axis=2)
+                brain_mask = gray_calc > 5
  
- frame_placeholder.image(
- final_render, 
- caption=f"🎥 Cinematic Fly-Through | Active Slice: {current_z} / {max_slices}", 
- use_container_width=True
- )
- time.sleep(loop_speed)
- else:
- # 3. STANDARD MANUAL CONTROL VIEWPORT
- raw_slice = mmap_data[::downsample, ::downsample, target_z, 0, :].astype(np.float32)
- gray_calc = np.mean(raw_slice, axis=2)
- brain_mask = gray_calc > 5
+                if np.any(brain_mask):
+                    t_min, t_max = np.min(raw_slice[brain_mask]), np.max(raw_slice[brain_mask])
+                    clipped = np.clip(raw_slice, t_min, t_max)
+                    normalized = (255.0 * (clipped - t_min) / (t_max - t_min)).astype(np.uint8)
+                    final_render = np.rot90(normalized, 3) # Fixed to turn image right-side up
+                else:
+                    blank_background = np.zeros_like(raw_slice).astype(np.uint8)
+                    final_render = np.rot90(blank_background, 3)
  
- if np.any(brain_mask):
- t_min, t_max = np.min(raw_slice[brain_mask]), np.max(raw_slice[brain_mask])
- clipped = np.clip(raw_slice, t_min, t_max)
- normalized = (255.0 * (clipped - t_min) / (t_max - t_min)).astype(np.uint8)
- final_render = np.rot90(normalized, 3) # Fixed to turn image right-side up
- else:
- blank_background = np.zeros_like(raw_slice).astype(np.uint8)
- final_render = np.rot90(blank_background, 3)
+                frame_placeholder.image(
+                    final_render, 
+                    caption=f"🎥 Cinematic Fly-Through | Active Slice: {current_z} / {max_slices}", 
+                    use_container_width=True
+                )
+                time.sleep(loop_speed)
+    else:
+        # 3. STANDARD MANUAL CONTROL VIEWPORT
+        raw_slice = mmap_data[::downsample, ::downsample, target_z, 0, :].astype(np.float32)
+        gray_calc = np.mean(raw_slice, axis=2)
+        brain_mask = gray_calc > 5
  
- st.image(
- final_render,
- caption=f"Static Viewport | Z-index position: {target_z} (Resolution: {final_render.shape[1]}x{final_render.shape[0]})",
- use_container_width=True
- )
+        if np.any(brain_mask):
+            t_min, t_max = np.min(raw_slice[brain_mask]), np.max(raw_slice[brain_mask])
+            clipped = np.clip(raw_slice, t_min, t_max)
+            normalized = (255.0 * (clipped - t_min) / (t_max - t_min)).astype(np.uint8)
+            final_render = np.rot90(normalized, 3) # Fixed to turn image right-side up
+        else:
+            blank_background = np.zeros_like(raw_slice).astype(np.uint8)
+            final_render = np.rot90(blank_background, 3)
  
- # ==============================================================================
- # 4. DYNAMIC MEDICAL MILESTONE METADATA PANEL
- # ==============================================================================
- st.write("---")
- st.subheader("📋 Clinical Anatomical Observations")
+        st.image(
+            final_render,
+            caption=f"Static Viewport | Z-index position: {target_z} (Resolution: {final_render.shape}x{final_render.shape})",
+            use_container_width=True
+        )
  
- # Render descriptive information blocks
- st.info(SPECIMEN_MODELS[chosen_specimen]["milestones"])
+    # ==============================================================================
+    # 4. DYNAMIC MEDICAL MILESTONE METADATA PANEL
+    # ==============================================================================
+    st.write("---")
+    st.subheader("📋 Clinical Anatomical Observations")
  
- # Display structural data metrics cards
- metric_col1, metric_col2 = st.columns(2)
- with metric_col1:
- st.metric(label="Total Z-Axis Available Slices", value=f"{max_slices} layers")
- with metric_col2:
- st.metric(label="Original Native Resolution", value=f"{shape[0]}x{shape[1]}")
+    # Render descriptive information blocks
+    st.info(SPECIMEN_MODELS[chosen_specimen]["milestones"])
+ 
+    # Display structural data metrics cards
+    metric_col1, metric_col2 = st.columns(2)
+    with metric_col1:
+        st.metric(label="Total Z-Axis Available Slices", value=f"{max_slices} layers")
+    with metric_col2:
+        st.metric(label="Original Native Resolution", value=f"{shape}x{shape}")
 
 except Exception as e:
- st.error(f"Application exception encountered: {e}")
+    st.error(f"Application exception encountered: {e}")
 
 # ==============================================================================
 # OPTIONAL EXPORT WORKFLOW: GENERATE MEDICAL PDF REPORT
@@ -233,32 +233,32 @@ story.append(Spacer(1, 20))
 story.append(Paragraph(f"<b>Lead Imaging Engineer:</b> Srinivasta", styles['Normal']))
 story.append(Paragraph(f"<b>Target Subject:</b> {chosen_specimen}", styles['Normal']))
 try:
- story.append(Paragraph(f"<b>Anatomical Slice Coordinate:</b> Z-Index Frame {target_z} / {max_slices}", styles['Normal']))
- story.append(Spacer(1, 15))
- story.append(Paragraph(f"<b>Clinical Observations Summary:</b>", styles['Heading3']))
- story.append(Paragraph(SPECIMEN_MODELS[chosen_specimen]["milestones"], styles['Normal']))
- story.append(Spacer(1, 20))
+    story.append(Paragraph(f"<b>Anatomical Slice Coordinate:</b> Z-Index Frame {target_z} / {max_slices}", styles['Normal']))
+    story.append(Spacer(1, 15))
+    story.append(Paragraph(f"<b>Clinical Observations Summary:</b>", styles['Heading3']))
+    story.append(Paragraph(SPECIMEN_MODELS[chosen_specimen]["milestones"], styles['Normal']))
+    story.append(Spacer(1, 20))
 
- # Convert active onscreen image frame matrix into a PDF image element
- img_buffer = io.BytesIO()
- plt_img = final_render 
- from PIL import Image as PILImage
- PILImage.fromarray(plt_img).save(img_buffer, format="PNG")
- img_buffer.seek(0)
+    # Convert active onscreen image frame matrix into a PDF image element
+    img_buffer = io.BytesIO()
+    plt_img = final_render 
+    from PIL import Image as PILImage
+    PILImage.fromarray(plt_img).save(img_buffer, format="PNG")
+    img_buffer.seek(0)
 
+    # Append the HD figure into the report file flow
+    story.append(Image(img_buffer, width=300, height=300))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph(f"<i>Figure 1: High-contrast tissue extraction matrix at Z-Index {target_z}. Generated via memory-mapped streaming pipelines.</i>", styles['Italic']))
 
-# Append the HD figure into the report file flow
-story.append(Image(img_buffer, width=300, height=300))
-story.append(Spacer(1, 10))
-story.append(Paragraph(f"<i>Figure 1: High-contrast tissue extraction matrix at Z-Index {target_z}. Generated via memory-mapped streaming pipelines.</i>", styles['Italic']))
-
-# 3. Compile the PDF and render a Streamlit Download Button
-doc.build(story)
-pdf_bytes = pdf_buffer.getvalue()
-
-st.download_button(
-    label="📥 Download Research Report PDF",
-    data=pdf_bytes,
-    file_name=f"DHARINI_Report_Z_{target_z}.pdf",
-    mime="application/pdf"
-)
+    # Compile the PDF and render a Streamlit Download Button
+    doc.build(story)
+    pdf_bytes = pdf_buffer.getvalue()
+    st.download_button(
+        label="📥 Download Research Report PDF",
+        data=pdf_bytes,
+        file_name=f"DHARINI_Report_Z_{target_z}.pdf",
+        mime="application/pdf"
+    )
+except NameError:
+    st.warning("Please wait for the specimen visualization matrix map to finish loading to export your PDF report.")
