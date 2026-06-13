@@ -1,6 +1,4 @@
-streamlit
 nibabel
 numpy
 boto3
 botocore
-cv2
