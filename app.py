@@ -113,26 +113,26 @@ try:
  mmap_data = load_and_map_specimen(chosen_specimen)
  shape = mmap_data.shape
  
- # Grab only the 3rd index (Z-axis depth layers) from the shape tuple
- max_slices = int(shape[2])
- 
- # Video Loop playback controls
- st.sidebar.subheader("🎬 Animation Player")
- col1, col2 = st.sidebar.columns(2)
- with col1:
- if st.button("▶️ Play Loop"):
- st.session_state.play_loop = True
- with col2:
- if st.button("⏹️ Pause"):
- st.session_state.play_loop = False
- 
- # Interval pacing selector
- loop_speed = st.sidebar.slider("Playback Speed (Seconds/Frame)", 0.01, 0.5, 0.05, step=0.01)
- 
- # Manual Navigation Sliders
- target_z = st.sidebar.slider("Manual Z-Index Position", 0, max_slices - 1, max_slices // 2)
- downsample = st.sidebar.slider("Pixel Detail Downsampling", 1, 4, 2)
- 
+     # Grab only the 3rd index (Z-axis depth layers) from the shape tuple
+    max_slices = int(shape[2])
+    
+    # Video Loop playback controls
+    st.sidebar.subheader("🎬 Animation Player")
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.button("▶️ Play Loop"):
+            st.session_state.play_loop = True
+    with col2:
+        if st.button("⏹️ Pause"):
+            st.session_state.play_loop = False
+    
+    # Interval pacing selector
+    loop_speed = st.sidebar.slider("Playback Speed (Seconds/Frame)", 0.01, 0.5, 0.05, step=0.01)
+    
+    # Manual Navigation Sliders
+    target_z = st.sidebar.slider("Manual Z-Index Position", 0, max_slices - 1, max_slices // 2)
+    downsample = st.sidebar.slider("Pixel Detail Downsampling", 1, 4, 2)
+
  # 2. RUNTIME ANIMATION LOOP LOGIC (THE GIF EFFECT)
  if st.session_state.play_loop:
  center_slice = max_slices // 2
