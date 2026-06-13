@@ -1,13 +1,24 @@
 # 🧠 DHARINI Full Lifespan 3D Fetal Brain Volume Navigator
 
-An interactive, cloud-native 3D neuroimaging navigator designed to stream, reconstruct, and slice through high-resolution second-trimester human brain reconstructions from the **IIT Madras DHARINI Dataset** (Sudha Gopalakrishnan Brain Centre). 
+An interactive, cloud-native 3D neuroimaging navigator designed to stream, reconstruct, and slice through high-resolution second-trimester human brain reconstructions from the **IIT Madras DHARINI Dataset**. 
+---
 
-Built using **Python, Streamlit, and GitHub**, this system connects anonymously to the **AWS Open Data Registry** to execute real-time multi-planar slice extraction with a zero-RAM server footprint.
+## 🙏 Acknowledgements & Gratitude
+* **To IIT Madras & The Sudha Gopalakrishnan Brain Centre**: Deepest gratitude is extended to the research engineers, neuroanatomists, and acquisition teams at IIT Madras. Their painstaking work in digitizing, aligning, and publishing these massive cellular-resolution datasets pushes the boundaries of global computational medicine.
+* **To Sudha Murty & Philanthropic Visionaries**: Sincere thanks to **Sudha Murty** and the philanthropic foundations whose foundational support and vision for cutting-edge computing centers in India have made world-class, open-access neuroscience research facilities a reality. Their generosity empowers independent developers worldwide to interact with high-value scientific pipelines.
+
+Built independently by **Srinivasta** using **Python, Streamlit, and GitHub**, this system connects anonymously to the **AWS Open Data Registry** to execute real-time multi-planar slice extraction with a zero-RAM server footprint.
 
 ---
 
 ## 🚀 Live Application
-🔗 **[Launch the Interactive Dashboard Web App](https://dharini-brain-viewer-begqsu7wyzbtdfrpx5y7b7.streamlit.app/)**
+🔗 **[Launch the Interactive Dashboard Web App](https://streamlit.app)**
+
+---
+
+## ⚖️ Data Attribution & Project Disclaimer
+* **Independent Development**: This software application is an independent open-source dashboard designed and architected entirely by **Srinivasta**. It is not financially sponsored by, affiliated with, or endorsed by IIT Madras or the Sudha Gopalakrishnan Brain Centre.
+* **Data Source Credit**: The underlying 3D brain volumes utilized by this dashboard are sourced directly from the publicly accessible **DHARINI Fetal Brain Atlas** repository hosted on the AWS Registry of Open Data. Deep gratitude is extended to the original acquisition scientists for making their structural neuroimaging data open to the global research community.
 
 ---
 
@@ -22,7 +33,7 @@ Built using **Python, Streamlit, and GitHub**, this system connects anonymously 
 ---
 
 ## 📊 Dataset Matrix Coverage (AWS Open Data)
-The application dynamically routes data for all 5 official specimens from the repository:
+The application dynamically routes data for all 5 official specimens from the open-source repository:
 1. **Specimen 1 (14 Weeks - FB34)**: Early second-trimester baseline. Smooth cortical surfaces and primitive ventricular chambers.
 2. **Specimen 2 (17 Weeks - FB40)**: Initiation of rapid deep cellular migration. Bundled axon pathways around core zones.
 3. **Specimen 3 (21 Weeks - FB62)**: Mid-development stratification. Visual layering of the cortical plate and subplate zones.
@@ -69,13 +80,11 @@ Your local browser tab will open automatically at `http://localhost:8501`.
 ├── requirements.txt    # Project runtime dependency checklist
 └── README.md           # Professional portfolio presentation documentation
 ```
----
 
 ---
 
 ## 🔬 Scientific Impact
 This application lowers the barrier to entry for studying human brain development. By creating an interactive, web-accessible "digital twin," neuroscientists, medical students, and AI researchers can analyze critical volumetric landmarks—such as ventricular compression, gyrification timelines, and tissue density gradients—directly from any device without requiring high-end graphics processing hardware.
 
----
 ---
 *Developed and architected by **Srinivasta** as an open-source educational dashboard showcasing cloud data pipe optimization for high-throughput healthcare informatics.*
