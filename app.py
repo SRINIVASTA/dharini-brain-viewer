@@ -155,9 +155,9 @@ try:
                     t_min, t_max = np.min(raw_slice[brain_mask]), np.max(raw_slice[brain_mask])
                     clipped = np.clip(raw_slice, t_min, t_max)
                     normalized = (255.0 * (clipped - t_min) / (t_max - t_min)).astype(np.uint8)
-                    final_render = np.rot90(normalized, 1)
+                    final_render = np.rot90(normalized, 3)
                 else:
-                    final_render = np.rot90(raw_slice, 1).astype(np.uint8)
+                    final_render = np.rot90(raw_slice, 3).astype(np.uint8)
                 
                 frame_placeholder.image(
                     final_render, 
