@@ -3,3 +3,4 @@ nibabel
 numpy
 boto3
 botocore
+reportlab
