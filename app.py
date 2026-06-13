@@ -24,13 +24,27 @@ SPECIMEN_MODELS = {
         "raw_nii": os.path.join(TMP_DIR, "FB34_volume.nii"),
         "gz": os.path.join(TMP_DIR, "FB34_volume.nii.gz")
     },
+    "Specimen 2 (17 Weeks - FB40)": {
+        "key": "data3d/FB40_nisl_128mpp_rgb_masked.nii.gz",
+        "raw_nii": os.path.join(TMP_DIR, "FB40_volume.nii"),
+        "gz": os.path.join(TMP_DIR, "FB40_volume.nii.gz")
+    },
     "Specimen 3 (21 Weeks - FB62)": {
         "key": "data3d/FB62_nisl_128mpp_rgb_masked.nii.gz",
         "raw_nii": os.path.join(TMP_DIR, "FB62_volume.nii"),
         "gz": os.path.join(TMP_DIR, "FB62_volume.nii.gz")
+    },
+    "Specimen 4 (22 Weeks - FB74)": {
+        "key": "data3d/FB74_nisl_128mpp_rgb_masked.nii.gz",
+        "raw_nii": os.path.join(TMP_DIR, "FB74_volume.nii"),
+        "gz": os.path.join(TMP_DIR, "FB74_volume.nii.gz")
+    },
+    "Specimen 5 (24 Weeks - FB85)": {
+        "key": "data3d/FB85_nisl_128mpp_rgb_masked.nii.gz",
+        "raw_nii": os.path.join(TMP_DIR, "FB85_volume.nii"),
+        "gz": os.path.join(TMP_DIR, "FB85_volume.nii.gz")
     }
 }
-
 @st.cache_resource
 def load_and_map_specimen(model_name):
     """Downloads and uncompresses the targeted NIfTI archive safely onto local disk space."""
