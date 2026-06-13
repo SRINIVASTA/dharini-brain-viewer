@@ -12,7 +12,7 @@ Built independently by **Srinivasta** using **Python, Streamlit, and GitHub**, t
 ---
 
 ## 🚀 Live Application
-🔗 **[Launch the Interactive Dashboard Web App](https://streamlit.app)**
+🔗 **[Launch the Interactive Dashboard Web App](https://dharini-brain-viewer-begqsu7wyzbtdfrpx5y7b7.streamlit.app/)**
 
 ---
 
