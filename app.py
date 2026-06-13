@@ -34,6 +34,7 @@ st.markdown("""
 # Render centered header elements using HTML blocks
 st.markdown('<h1 class="centered-title-block">🧠 DHARINI Full Lifespan 3D Navigator</h1>', unsafe_allow_html=True)
 st.markdown('<p class="centered-title-block" style="color: gray; margin-bottom: 25px;">An interactive multi-specimen fly-through engine powered by IIT Madras and AWS Open Data.</p>', unsafe_allow_html=True)
+st.markdown('<p class="centered-title-block" style="color: #4CAF50; font-weight: bold; font-size: 14px; margin-bottom: 25px;">🚀 Created by Srinivasa</p>', unsafe_allow_html=True)
 
 st.write("💡 **What to watch for in the animation:** Press *Play Loop* and compare Specimen 1 against Specimen 5. Notice how the internal dark chambers (ventricles) compress as the surrounding brain matter grows thicker, and look for the early physical folds starting to appear on the outer edge of the 24-week brain!")
 
