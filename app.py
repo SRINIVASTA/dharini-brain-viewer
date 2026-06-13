@@ -202,3 +202,57 @@ try:
 
 except Exception as e:
     st.error(f"Application exception encountered: {e}")
+
+# ==============================================================================
+# OPTIONAL EXPORT WORKFLOW: GENERATE MEDICAL PDF REPORT
+# ==============================================================================
+import io
+import subprocess
+# Safely install reportlab into the container if it's missing
+subprocess.run(["pip", "install", "reportlab", "--quiet"])
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet
+
+st.write("---")
+st.subheader("💾 Export Clinical Findings")
+
+# Create an in-memory buffer to build the PDF without using disk storage
+pdf_buffer = io.BytesIO()
+doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+story = []
+styles = getSampleStyleSheet()
+
+# 1. Add Text Content to the Document Structure
+story.append(Paragraph(f"<b>DHARINI NEUROIMAGING RECONSTRUCTION REPORT</b>", styles['Title']))
+story.append(Spacer(1, 20))
+story.append(Paragraph(f"<b>Target Subject:</b> {chosen_specimen}", styles['Normal']))
+story.append(Paragraph(f"<b>Anatomical Slice Coordinate:</b> Z-Index Frame {target_z} / {max_slices}", styles['Normal']))
+story.append(Spacer(1, 15))
+story.append(Paragraph(f"<b>Clinical Observations Summary:</b>", styles['Heading3']))
+story.append(Paragraph(SPECIMEN_MODELS[chosen_specimen]["milestones"], styles['Normal']))
+story.append(Spacer(1, 20))
+
+# 2. Convert your active onscreen image frame matrix into a PDF image element
+# Save final_render to an in-memory image buffer
+img_buffer = io.BytesIO()
+plt_img = final_render # Grabs the active, contrast-boosted matrix from your screen
+from PIL import Image as PILImage
+PILImage.fromarray(plt_img).save(img_buffer, format="PNG")
+img_buffer.seek(0)
+
+# Append the HD figure into the report file flow
+story.append(Image(img_buffer, width=300, height=300))
+story.append(Spacer(1, 10))
+story.append(Paragraph(f"<i>Figure 1: High-contrast tissue extraction matrix at Z-Index {target_z}. Generated via memory-mapped streaming pipelines.</i>", styles['Italic']))
+
+# 3. Compile the PDF and render a Streamlit Download Button
+doc.build(story)
+pdf_bytes = pdf_buffer.getvalue()
+
+st.download_button(
+    label="📥 Download Research Report PDF",
+    data=pdf_bytes,
+    file_name=f"DHARINI_Report_Z_{target_z}.pdf",
+    mime="application/pdf"
+)
