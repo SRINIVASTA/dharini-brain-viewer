@@ -109,13 +109,9 @@ try:
 
     # 2. RUNTIME ANIMATION LOOP LOGIC (THE GIF EFFECT)
     if st.session_state.play_loop:
-        # ✅ CHANGE: Set loop bounds to scan through every single available layer
-        start_frame = 0
-        end_frame = max_slices
-    # if st.session_state.play_loop:
-        # center_slice = max_slices // 2
-        # start_frame = max(0, center_slice - 25)
-        # end_frame = min(max_slices, center_slice + 25)
+        center_slice = max_slices // 2
+        start_frame = max(0, center_slice - 25)
+        end_frame = min(max_slices, center_slice + 25)
         
         frame_placeholder = st.empty()
         
