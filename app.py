@@ -1,86 +1,86 @@
-import streamlit as st
+import os
+import gzip
+import shutil
 import numpy as np
+import streamlit as st
+import nibabel as nib
 import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
 
-st.set_page_config(page_title="DHARINI Live Streamer", layout="centered", page_icon="🧠")
+st.set_page_config(page_title="DHARINI Live Viewer", layout="centered", page_icon="🧠")
 st.title("🧠 DHARINI Real-Time 3D Volume Slicer")
-st.caption("Streaming exact voxel structures straight from the AWS Open Data Registry.")
+st.caption("Streaming 3D anatomical structures directly from the AWS Open Data Registry.")
 
+# Production file configurations
 BUCKET_NAME = "dharani-fetal-brain-atlas"
 S3_KEY = "data3d/FB34_nisl_128mpp_rgb_masked.nii.gz"
 
-# The real dimensions of the NIfTI array dataset: (Width, Height, Depth, 1, Channels)
-X_DIM, Y_DIM, Z_DIM = 625, 625, 707
-BYTES_PER_PIXEL = 3  # RGB data channels
+TMP_DIR = "/tmp/dharini_runtime"
+COMPRESSED_PATH = os.path.join(TMP_DIR, "FB34_volume.nii.gz")
+UNCOMPRESSED_PATH = os.path.join(TMP_DIR, "FB34_volume.nii")
 
 @st.cache_resource
-def get_s3():
-    return boto3.client('s3', config=Config(signature_version=UNSIGNED))
+def initialize_and_map_volume():
+    """Downloads, decompresses, and memory-maps the 3D NIfTI file on the server disk."""
+    if not os.path.exists(UNCOMPRESSED_PATH):
+        os.makedirs(TMP_DIR, exist_ok=True)
+        
+        # 1. Download archive safely using an anonymous S3 hook
+        s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+        with st.spinner("📥 Initializing 3D Dataset from AWS Open Data (approx. 107MB)..."):
+            s3.download_file(BUCKET_NAME, S3_KEY, COMPRESSED_PATH)
+        
+        # 2. Decompress archive onto the local disk block space to save RAM
+        with st.spinner("💥 Unpacking 3D volumetric matrix layers..."):
+            with gzip.open(compressed_path if 'compressed_path' in locals() else COMPRESSED_PATH, 'rb') as f_in:
+                with open(UNCOMPRESSED_PATH, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+                    
+        # Remove compressed file to optimize local storage footprint
+        if os.path.exists(COMPRESSED_PATH):
+            os.remove(COMPRESSED_PATH)
+            
+    # 3. Memory-map the uncompressed NIfTI file (Uses 0MB RAM)
+    nii_obj = nib.load(uncompressed_path if 'uncompressed_path' in locals() else UNCOMPRESSED_PATH, mmap='r')
+    return nii_obj.dataobj
 
-# 1. UI Navigation Panel Elements
-st.sidebar.header("🕹️ Slice Explorer")
-target_z = st.sidebar.slider("Select Z-Index Position", 0, Z_DIM - 1, 279)
-downsample = st.sidebar.slider("Pixel Detail Striding", 1, 4, 2)
-
-@st.cache_data(show_spinner="Streaming true anatomical slice array from AWS...")
-def stream_brain_slice(z_index):
-    s3 = get_s3()
-    
-    # NIfTI-1 file header offset is exactly 348 bytes.
-    nifti_header_offset = 348
-    
-    # Calculate the exact byte location of the selected 2D layer inside the 3D block
-    slice_size_bytes = X_DIM * Y_DIM * BYTES_PER_PIXEL
-    start_byte = nifti_header_offset + (z_index * slice_size_bytes)
-    end_byte = start_byte + slice_size_bytes - 1
-    
-    # Execute HTTP Range Request to fetch only this specific slice's bytes (approx. 1.1MB)
-    response = s3.get_object(
-        Bucket=BUCKET_NAME,
-        Key=S3_KEY,
-        Range=f"bytes={start_byte}-{end_byte}"
-    )
-    
-    # Read raw string bytes straight into an uncompressed NumPy array matrix
-    raw_bytes = response['Body'].read()
-    flat_array = np.frombuffer(raw_bytes, dtype=np.uint8)
-    
-    # Reshape vector straight into the standard tissue matrix grid
-    slice_2d = flat_array.reshape((Y_DIM, X_DIM, BYTES_PER_PIXEL))
-    return slice_2d
-
-# 2. Extract and Process the Chosen Array Layer
+# Run the master cloud setup routine
 try:
-    raw_anatomy = stream_brain_slice(target_z)
+    mmap_data = initialize_and_map_volume()
+    shape = mmap_data.shape
     
-    # Downsample matrix array to protect browser presentation memory
-    processed_frame = raw_anatomy[::downsample, ::downsample, :]
+    # 4. Interactive Navigation Sidebar Controls
+    st.sidebar.header("🕹️ Slice controls")
+    # Axis 2 of this dataset corresponds to the true 707 depth layers
+    target_z = st.sidebar.slider("Select Z-Index Depth", 0, shape[2] - 1, 279)
+    downsample = st.sidebar.slider("Pixel Detail Striding", 1, 4, 2)
+    
+    # Extract EXACTLY ONE slice grid on demand
+    # Pass 0 to the 4th axis index to drop the singleton dimension seamlessly
+    raw_slice = mmap_data[::downsample, ::downsample, target_z, 0, :].astype(np.float32)
     
     # --- COLAB MEDICAL CONTRAST-BOOST PIPELINE ---
-    gray_calc = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2GRAY)
-    brain_mask = gray_calc > 5  # Filter out dark, unmapped background voxels
+    gray_calc = np.mean(raw_slice, axis=2)
+    brain_mask = gray_calc > 5  # Filter out background empty voids
     
     if np.any(brain_mask):
-        # Localize exact maximum and minimum threshold vectors
-        t_min = np.min(processed_frame[brain_mask])
-        t_max = np.max(processed_frame[brain_mask])
+        t_min = np.min(raw_slice[brain_mask])
+        t_max = np.max(raw_slice[brain_mask])
         
-        # Stretch visible tones across full 8-bit dynamic spectrum
-        clipped = np.clip(processed_frame, t_min, t_max)
+        # Stretch visible tones across full 8-bit dynamic canvas spectrum
+        clipped = np.clip(raw_slice, t_min, t_max)
         normalized = (255.0 * (clipped - t_min) / (t_max - t_min)).astype(np.uint8)
         final_render = np.rot90(normalized, 1)
     else:
-        final_render = np.rot90(processed_frame, 1)
-
-    # 3. Output Render Result to Streamlit Canvas
+        final_render = np.rot90(raw_slice, 1).astype(np.uint8)
+        
+    # 5. Output Image Result to Canvas Container
     st.image(
-        final_render, 
-        caption=f"Anatomical Matrix view at Z-depth layer: {target_z}", 
+        final_render,
+        caption=f"Real anatomy viewport at Z-index position: {target_z} (Resolution: {final_render.shape[1]}x{final_render.shape[0]})",
         use_container_width=True
     )
 
 except Exception as e:
-    st.error(f"Failed to fetch cloud byte arrays: {e}")
-    st.info("Tip: Ensure your GitHub repository contains boto3 and dependencies in requirements.txt.")
+    st.error(f"Application environment exception: {e}")
